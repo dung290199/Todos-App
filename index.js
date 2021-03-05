@@ -1,17 +1,11 @@
-var all = 0;
-var active = 0;
-var completed = 0;
-var todoList = {
-    "active": [],
-    "completed": []
-};
+let todoList = [];
+let tab;
 
 function newToDo( e ) {
     if (e.key == "Enter") {
-        // alert( "this is Enter!");
-        var li = document.createElement("LI");
-        let id = todoList.active.length + todoList.completed.length;
-        li.setAttribute("id", id);
+        let li = document.createElement("LI");
+        let id = todoList.length;
+        li.id = id;
 
         var checkBox = document.createElement("INPUT");
         checkBox.type = "checkbox";
@@ -24,15 +18,15 @@ function newToDo( e ) {
             }
         })
 
-        var label = document.createElement("LABEL");
+        let label = document.createElement("LABEL");
         label.for = "item" + id;
 
-        var todo = document.getElementById("new-todos").value;
+        let todo = document.getElementById("new-todos").value;
         document.getElementById("new-todos").value = "";
-        var text = document.createTextNode(todo);
+        let text = document.createTextNode(todo);
         label.appendChild(text);
         
-        var deleteButton = document.createElement("BUTTON");
+        let deleteButton = document.createElement("BUTTON");
         deleteButton.className = "delete";
         deleteButton.addEventListener("click", function() {
             deleteItem(id);
@@ -40,71 +34,196 @@ function newToDo( e ) {
 
         if (document.getElementById("todo-list").childElementCount === 0) {
             document.getElementsByClassName("footer")[0].style.visibility = "visible";
+            document.getElementById("all").className = "selected";
         }
 
         li.appendChild(checkBox);
         li.appendChild(label);
         li.appendChild(deleteButton);
 
-
-        console.log("Todo: " + todo);
-        console.log("Label: " + label);
-
         document.getElementById("todo-list").appendChild(li);
+        let icon = document.getElementById("selectAll");
+        icon.style.visibility = "visible";
+        icon.addEventListener("click", () => {
+            selectAll();
+        });
 
-        
-
-        // all = document.getElementById("todo-list").childElementCount;
-        // active++;
-        todoList.active.push(li);
-        console.log("TodoList: " + todoList.active.join() + todoList.completed.join());
-
-        console.log("All: " + all + ", Active: " + todoList.active.length);
+        todoList.push({id: id, item : li, status: true});
+        tab = "all";
+        getCounter();
 
         return false;
     }
 }
 
 function deleteItem( id ) {
-    console.log("Id to remove: " + id);
+    let index = todoList.filter( ( val, index ) => {
+        if ( val.id === id ) {
+            return index;
+        }
+    } );
 
-    
+    todoList.splice(index, 1);
     document.getElementById(id).remove();
-    all = document.getElementById("todo-list").childElementCount;
-    
-    if (all === 0) {
+    getCounter();
+    if (todoList.length === 0) {
         document.getElementsByClassName("footer")[0].style.visibility = "hidden";
+        document.getElementById("selectAll").style.visibility = "hidden";
+    } else {
+        displayDeleteAllCompleted(getCompletedCount() !== 0);
     }
+    return;
 }
 
 function addToCompleted( id ) {
-
-    console.log("go in add");
-    let item = document.getElementById(id);
-    todoList.completed.push(item);
-    todoList.active.splice( todoList.active.indexOf(item), 1 );
-
-    console.log("Completed: " + todoList.completed.length + " active: " + todoList.active.length + " all: " + all);
+    todoList.map( val => {
+        if (val.id === id) {
+            val.status = false;
+            let li = document.getElementById(val.id);
+            li.getElementsByTagName("LABEL")[0].className = "checked";
+            if (tab === "active") {
+                li.remove();
+            }
+        }
+        return;
+    } );
+    
+    displayDeleteAllCompleted(true);
+    getCounter();
+    return;
 }
 
 function removeFromCompleted(id) {
-    console.log("go in remove");
-    let item = document.getElementById(id);
-    todoList.active.push(item);
-    todoList.completed.splice( todoList.completed.indexOf(item), 1 );
+    todoList.map( val => {
+        if ( val.id === id ) {
+            val.status = true;
+            let li = document.getElementById(val.id);
+            li.getElementsByTagName("LABEL")[0].classList.remove("checked");
+            if ( tab === "completed" ) {
+                li.remove();
+            }
+        }
+        return;
+    } );
 
-    console.log("Completed: " + todoList.completed.length + " active: " + todoList.active.length + " all: " + all);
+    displayDeleteAllCompleted( getCompletedCount() !== 0 );
+
+    getCounter();
+    return;
 }
 
 function removeAllCompleted() {
-    todoList.completed.map(val => {
-        document.getElementById(val.id).remove();
+    todoList = todoList.filter(val => {
+        if (!val.status) {
+            document.getElementById(val.id).remove();
+            return;
+        } else {
+            return val;
+        }
     });
-    todoList.completed = [];
-    all = document.getElementById("todo-list").childElementCount;
-    
-    if (all === 0) {
+
+    getCounter();
+    if (todoList.length === 0) {
         document.getElementsByClassName("footer")[0].style.visibility = "hidden";
+        document.getElementById("selectAll").style.visibility = "hidden";
+    } else {
+        displayDeleteAllCompleted(false);
     }
-    console.log("complete.length: " + todoList.completed.length);
+    return;
+}
+
+function getCounter() {
+    let span = document.getElementById("counter");
+    let counter = document.createTextNode(todoList.filter( val => val.status ).length);
+    if (span.childNodes.length === 0) {
+        span.appendChild(counter);
+    } else {
+        span.replaceChild(counter, span.childNodes[0]);
+    }
+
+    return;
+}
+
+function getAll() {
+    document.getElementById("all").className = "selected";
+    document.getElementById("active").classList.remove("selected");
+    document.getElementById("completed").classList.remove("selected");
+
+    let list = document.getElementById("todo-list");
+
+    todoList.map( val => {
+        list.appendChild(val.item);
+    });
+    tab = "all";
+
+    return;
+}
+
+function getActive() {
+    document.getElementById("active").className = "selected";
+    document.getElementById("all").classList.remove("selected");
+    document.getElementById("completed").classList.remove("selected");
+
+    let list = document.getElementById("todo-list");
+    removeAllChildNodes(list);
+
+    let arr = todoList.filter(val => val.status);
+    arr.map( val => list.appendChild(val.item) );
+    tab = "active";
+
+    return;
+}
+
+function getCompleted() {
+    document.getElementById("completed").className = "selected";
+    document.getElementById("active").classList.remove("selected");
+    document.getElementById("all").classList.remove("selected");
+
+    let list = document.getElementById("todo-list");
+    removeAllChildNodes(list);
+
+    let arr = todoList.filter(val => !val.status);
+    arr.map( val => list.appendChild(val.item) );
+    tab = "completed";
+    return;
+}
+
+function removeAllChildNodes(parent) {
+    while (parent.firstChild) {
+        parent.removeChild(parent.firstChild);
+    }
+    return;
+}
+
+function selectAll() {
+    let check = todoList.filter( val => val.status );
+    if ( check.length !== 0 ) {
+        todoList = todoList.map( val => {
+            val.status = false;
+            let li = document.getElementById(val.id);
+            li.getElementsByTagName("INPUT")[0].checked =  true;
+            li.getElementsByTagName("LABEL")[0].className = "checked";
+            return val;
+        } );
+        displayDeleteAllCompleted(true);
+    } else {
+        todoList = todoList.map( val => {
+            val.status = true;
+            let li = document.getElementById(val.id);
+            li.getElementsByTagName("INPUT")[0].checked = false;
+            li.getElementsByTagName("LABEL")[0].classList.remove("checked");
+            return val;
+        } );
+        displayDeleteAllCompleted(false);
+    }
+    getCounter();
+}
+
+function getCompletedCount() {
+    return todoList.filter( val => !val.status ).length;
+}
+
+function displayDeleteAllCompleted( arg ) {
+    document.getElementsByClassName("footer")[0].getElementsByTagName("A")[3].style.visibility = arg ? "visible" : "hidden";
+    return;
 }

@@ -3,8 +3,7 @@
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
-
-        <!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css"> -->
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css">
         <link href="index.css" rel="stylesheet" media="screen,print" />
         <script src="index.js"></script>
 
@@ -13,7 +12,7 @@
     <body>
         <h1>todos</h1>
         <div class="header">
-            <i class="fas fa-chevron-down"></i>
+            <i id="selectAll" class="fas fa-chevron-down"></i>
             <input id="new-todos" type="text" placeholder="What needs to be done?" onkeypress="newToDo(event)"/>
         </div>
 
@@ -23,16 +22,16 @@
         </div>
 
         <div class="footer">
-            <span class="counter">2 items</span>
+            <p><span id="counter"></span> items left</p>
             <ul class="filters">
                 <li>
-                    <span>All</span>
+                    <a id="all" href="#" onclick="getAll()">All</a>
                 </li>
                 <li>
-                    <span>Active</span>
+                    <a id="active" href="#" onclick="getActive()">Active</a>
                 </li>
                 <li>
-                    <span>Completed</span>
+                    <a id="completed" href="#" onclick="getCompleted()">Completed</a>
                 </li>
             </ul>
             <a href="#" onclick="removeAllCompleted()">Clear completed</a>
