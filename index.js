@@ -143,9 +143,8 @@ function removeAllCompleted() {
     if (todoList.length === 0) {
         document.getElementsByClassName("footer")[0].style.visibility = "hidden";
         document.getElementById("selectAll").style.visibility = "hidden";
-    } else {
         displayDeleteAllCompleted(false);
-    }
+    } 
     return;
 }
 

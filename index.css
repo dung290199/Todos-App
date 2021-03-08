@@ -9,10 +9,6 @@ body {
     align-items: center;
 }
 
-/* .main, .footer {
-    visibility: hidden;
-} */
-
 .footer {
     visibility: hidden;
 }
@@ -23,9 +19,6 @@ h1 {
     text-align: center;
     color: rgba(175, 47, 47, 0.15);
     margin: 15px;
-    /* position: relative;
-    top: 0;
-    padding-left: 100px; */
 }
 
 .header {
@@ -130,11 +123,7 @@ label {
 }
 
 .main li .delete {
-    /* display: none; */
     position: relative;
-    /* top: 0;
-    right: 10px;
-    bottom: 0; */
     left: 450px;
     border: none;
     width: 40px;
@@ -145,14 +134,12 @@ label {
     background: #ffffff;
     cursor: pointer;
     outline-style: none;
-    /* margin-bottom: 11px; */
     transition: color 0.2s ease-out;
 }
 
 .main li .delete:after {
     content: "\f00d";
     font-family: "FontAwesome";
-    /* font-size: 20px; */
     font-weight: normal;
 }
 
@@ -189,7 +176,6 @@ label {
     display: block;
     width: 506px;
     padding: 12px 16px;
-    /* margin: 0 0 0 43px; */
     margin-left: -10px;
 }
 
@@ -214,8 +200,6 @@ label {
     flex-direction: row;
     justify-content: space-between;
     margin: 10px;
-    /* margin: 10px;    */
-    /* padding: 0 50px; */
 }
 
 .footer li a {
@@ -224,7 +208,6 @@ label {
 }
 
 .footer li a:hover {
-    /* border: 1px solid rgba(175, 47, 47, 0.2); */
     border: 1px solid #d3d3d3;
 }
 
