@@ -1,10 +1,14 @@
 let todoList = [];
-let tab;
+let tab = [
+    { name: "all", status: false },
+    { name: "active", status: false },
+    { name: "completed", status: false }
+];
 
 function newToDo( e ) {
     if (e.key === "Enter") {
         let li = document.createElement("LI");
-        let id = todoList.length;
+        let id = '_' + Math.random().toString(36).substr(2, 9);
         li.id = id;
 
         var checkBox = document.createElement("INPUT");
@@ -46,27 +50,26 @@ function newToDo( e ) {
                 update(id);
             }
         }
-        
-
-        if (document.getElementById("todo-list").childElementCount === 0) {
-            document.getElementsByClassName("footer")[0].style.visibility = "visible";
-            document.getElementById("all").className = "selected";
-        }
 
         li.appendChild(checkBox);
         li.appendChild(label);
         li.appendChild(deleteButton);
         li.appendChild(edit);
 
-        document.getElementById("todo-list").appendChild(li);
-        let icon = document.getElementById("selectAll");
-        icon.style.visibility = "visible";
-        icon.onclick = function(event) {
-            selectAll(event);
-        }
-
         todoList.push({id: id, item : li, status: true});
-        tab = "all";
+
+        if (todoList.length === 1){
+            selectedTab("all");
+            document.getElementsByClassName("footer")[0].style.visibility = "visible";
+            let icon = document.getElementById("selectAll");
+            icon.style.visibility = "visible";
+            icon.onclick = function(event) {
+                selectAll(event);
+            }
+        } 
+        if ( tab.filter( val => val.status )[0].name !== "completed" ) {
+            document.getElementById("todo-list").appendChild(li);
+        }
         getCounter();
 
         return false;
@@ -84,25 +87,23 @@ function deleteItem( id ) {
     document.getElementById(id).remove();
     getCounter();
     if (todoList.length === 0) {
-        document.getElementsByClassName("footer")[0].style.visibility = "hidden";
-        document.getElementById("selectAll").style.visibility = "hidden";
-    } else {
-        displayClearCompletedLink(countCompleted() !== 0);
+        hiddenFooter();
     }
+    displayClearCompletedLink(countCompleted() !== 0);
     return;
 }
 
 function addToCompleted( id ) {
-    todoList.map( val => {
+    todoList = todoList.map( val => {
         if (val.id === id) {
             val.status = false;
             let li = document.getElementById(val.id);
             li.getElementsByTagName("LABEL")[0].className = "checked";
-            if (tab === "active") {
+            if (tab[1].status) {
                 li.remove();
             }
         }
-        return;
+        return val;
     } );
     
     displayClearCompletedLink(true);
@@ -111,16 +112,16 @@ function addToCompleted( id ) {
 }
 
 function removeFromCompleted(id) {
-    todoList.map( val => {
+    todoList = todoList.map( val => {
         if ( val.id === id ) {
             val.status = true;
             let li = document.getElementById(val.id);
             li.getElementsByTagName("LABEL")[0].classList.remove("checked");
-            if ( tab === "completed" ) {
+            if ( tab[2].status ) {
                 li.remove();
             }
         }
-        return;
+        return val;
     } );
 
     displayClearCompletedLink( countCompleted() !== 0 );
@@ -131,20 +132,28 @@ function removeFromCompleted(id) {
 
 function clearCompleted() {
     todoList = todoList.filter(val => {
-        if (!val.status) {
+        if (!val.status && ( tab[0].status || tab[2].status )) {
             document.getElementById(val.id).remove();
-            return false;
-        } else {
-            return true;
         }
+        return val.status;
     });
 
     getCounter();
     if (todoList.length === 0) {
-        document.getElementsByClassName("footer")[0].style.visibility = "hidden";
-        document.getElementById("selectAll").style.visibility = "hidden";
-        displayClearCompletedLink(false);
+        hiddenFooter();
     } 
+    displayClearCompletedLink(false);
+
+    return;
+}
+
+function hiddenFooter() {
+    tab = tab.map( val => {
+        val.status = false;
+        return val;
+    });
+    document.getElementsByClassName("footer")[0].style.visibility = "hidden";
+    document.getElementById("selectAll").style.visibility = "hidden";
     return;
 }
 
@@ -160,47 +169,51 @@ function getCounter() {
     return;
 }
 
-function all() {
-    document.getElementById("all").className = "selected";
-    document.getElementById("active").classList.remove("selected");
-    document.getElementById("completed").classList.remove("selected");
+function getAll() {
+    selectedTab("all");
 
     let list = document.getElementById("todo-list");
-
     todoList.map( val => {
         list.appendChild(val.item);
     });
-    tab = "all";
 
     return;
 }
 
-function active() {
-    document.getElementById("active").className = "selected";
-    document.getElementById("all").classList.remove("selected");
-    document.getElementById("completed").classList.remove("selected");
+function getActive() {
+    selectedTab("active");
 
     let list = document.getElementById("todo-list");
     removeAllChildNodes(list);
 
     let arr = todoList.filter(val => val.status);
     arr.map( val => list.appendChild(val.item) );
-    tab = "active";
 
     return;
 }
 
-function completed() {
-    document.getElementById("completed").className = "selected";
-    document.getElementById("active").classList.remove("selected");
-    document.getElementById("all").classList.remove("selected");
+function getCompleted() {
+    selectedTab("completed");
 
     let list = document.getElementById("todo-list");
     removeAllChildNodes(list);
 
     let arr = todoList.filter(val => !val.status);
     arr.map( val => list.appendChild(val.item) );
-    tab = "completed";
+    return;
+}
+
+function selectedTab(name) {
+    tab = tab.map( val => {
+        val.status = val.name === name;
+        if (val.status) {
+            document.getElementById(val.name).className = "selected";
+        } else {
+            document.getElementById(val.name).classList.remove("selected");
+        }
+        return val;
+    });
+
     return;
 }
 
@@ -213,32 +226,31 @@ function removeAllChildNodes(parent) {
 
 function selectAll() {
     let check = todoList.filter( val => val.status );
-    if ( check.length !== 0 ) {
-        todoList = todoList.map( val => {
-            val.status = false;
-            let li = document.getElementById(val.id.toString());
-            li.getElementsByTagName("INPUT")[0].checked =  true;
-            li.getElementsByTagName("LABEL")[0].className = "checked";
-            if (tab === "active") {
-                li.remove();
-            }
-            return val;
-
-        } );
-        displayClearCompletedLink(true);
-    } else {
-        todoList = todoList.map( val => {
-            val.status = true;
-            let li = document.getElementById(val.id.toString());
-            li.getElementsByTagName("INPUT")[0].checked = false;
-            li.getElementsByTagName("LABEL")[0].classList.remove("checked");
-            if ( tab === "completed" ) {
-                li.remove();
-            }
-            return val;
-        } );
-        displayClearCompletedLink(false);
-    }
+    let list = document.getElementById("todo-list");
+    todoList = ( check.length !== 0 ) 
+                ? todoList.map( val => {
+                        val.status = false;
+                        val.item.getElementsByTagName("INPUT")[0].checked =  true;
+                        val.item.getElementsByTagName("LABEL")[0].className = "checked";
+                        if (tab[1].status) {
+                            document.getElementById(val.id).remove();
+                        } else if (tab[2].status) {
+                            list.appendChild(val.item);                        
+                        }
+                        return val;
+                    } )
+                : todoList.map( val => {
+                        val.status = true;
+                        val.item.getElementsByTagName("INPUT")[0].checked = false;
+                        val.item.getElementsByTagName("LABEL")[0].classList.remove("checked");
+                        if ( tab[2].status ) {
+                            document.getElementById(val.id).remove();
+                        } else if ( tab[1].status ) {
+                            list.appendChild(val.item);
+                        }
+                        return val;
+                    } );
+    displayClearCompletedLink( countCompleted() !== 0);
     getCounter();
     return;
 }
@@ -255,7 +267,7 @@ function displayClearCompletedLink( arg ) {
 function editing(id) {
     let edit = document.getElementById("edit" + id);
     edit.style.visibility = "visible";
-    
+
     let li = document.getElementById(id);
     let label = li.getElementsByTagName("LABEL")[0].innerHTML;
     edit.value = label;
@@ -265,11 +277,9 @@ function editing(id) {
     li.childNodes[0].style.display = "none";
     li.childNodes[1].style.display = "none";
     return;
-    
 }
 
 function update(id) {
-    
     let edit = document.getElementById("edit" + id);
     edit.style.visibility = "hidden";
 

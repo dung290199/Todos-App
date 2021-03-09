@@ -117,7 +117,7 @@ input[type=checkbox]:checked:after {
 
 label {
     text-align: left;
-    word-break: break-all;
+    word-wrap: break-word;
     padding: 15px 15px 15px 40px;
     display: inline-block;
     min-width: 475px;
