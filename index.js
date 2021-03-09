@@ -87,7 +87,7 @@ function deleteItem( id ) {
         document.getElementsByClassName("footer")[0].style.visibility = "hidden";
         document.getElementById("selectAll").style.visibility = "hidden";
     } else {
-        displayDeleteAllCompleted(getCompletedCount() !== 0);
+        displayClearCompletedLink(countCompleted() !== 0);
     }
     return;
 }
@@ -105,7 +105,7 @@ function addToCompleted( id ) {
         return;
     } );
     
-    displayDeleteAllCompleted(true);
+    displayClearCompletedLink(true);
     getCounter();
     return;
 }
@@ -123,13 +123,13 @@ function removeFromCompleted(id) {
         return;
     } );
 
-    displayDeleteAllCompleted( getCompletedCount() !== 0 );
+    displayClearCompletedLink( countCompleted() !== 0 );
 
     getCounter();
     return;
 }
 
-function removeAllCompleted() {
+function clearCompleted() {
     todoList = todoList.filter(val => {
         if (!val.status) {
             document.getElementById(val.id).remove();
@@ -143,7 +143,7 @@ function removeAllCompleted() {
     if (todoList.length === 0) {
         document.getElementsByClassName("footer")[0].style.visibility = "hidden";
         document.getElementById("selectAll").style.visibility = "hidden";
-        displayDeleteAllCompleted(false);
+        displayClearCompletedLink(false);
     } 
     return;
 }
@@ -160,7 +160,7 @@ function getCounter() {
     return;
 }
 
-function getAll() {
+function all() {
     document.getElementById("all").className = "selected";
     document.getElementById("active").classList.remove("selected");
     document.getElementById("completed").classList.remove("selected");
@@ -175,7 +175,7 @@ function getAll() {
     return;
 }
 
-function getActive() {
+function active() {
     document.getElementById("active").className = "selected";
     document.getElementById("all").classList.remove("selected");
     document.getElementById("completed").classList.remove("selected");
@@ -190,7 +190,7 @@ function getActive() {
     return;
 }
 
-function getCompleted() {
+function completed() {
     document.getElementById("completed").className = "selected";
     document.getElementById("active").classList.remove("selected");
     document.getElementById("all").classList.remove("selected");
@@ -211,8 +211,7 @@ function removeAllChildNodes(parent) {
     return;
 }
 
-function selectAll(event) {
-
+function selectAll() {
     let check = todoList.filter( val => val.status );
     if ( check.length !== 0 ) {
         todoList = todoList.map( val => {
@@ -226,7 +225,7 @@ function selectAll(event) {
             return val;
 
         } );
-        displayDeleteAllCompleted(true);
+        displayClearCompletedLink(true);
     } else {
         todoList = todoList.map( val => {
             val.status = true;
@@ -238,17 +237,17 @@ function selectAll(event) {
             }
             return val;
         } );
-        displayDeleteAllCompleted(false);
+        displayClearCompletedLink(false);
     }
     getCounter();
     return;
 }
 
-function getCompletedCount() {
+function countCompleted() {
     return todoList.filter( val => !val.status ).length;
 }
 
-function displayDeleteAllCompleted( arg ) {
+function displayClearCompletedLink( arg ) {
     document.getElementsByClassName("footer")[0].getElementsByTagName("A")[3].style.visibility = arg ? "visible" : "hidden";
     return;
 }
@@ -256,7 +255,7 @@ function displayDeleteAllCompleted( arg ) {
 function editing(id) {
     let edit = document.getElementById("edit" + id);
     edit.style.visibility = "visible";
-    edit.classList.add("editing");
+    
     let li = document.getElementById(id);
     let label = li.getElementsByTagName("LABEL")[0].innerHTML;
     edit.value = label;
@@ -264,7 +263,7 @@ function editing(id) {
     edit.scrollLeft = edit.scrollWidth;
 
     li.childNodes[0].style.display = "none";
-    li.childNodes[1].style.visibility = "hidden";
+    li.childNodes[1].style.display = "none";
     return;
     
 }
@@ -273,10 +272,11 @@ function update(id) {
     
     let edit = document.getElementById("edit" + id);
     edit.style.visibility = "hidden";
+
     let li = document.getElementById(id);
     li.getElementsByTagName("LABEL")[0].innerHTML = edit.value;
     li.childNodes[0].style.display = "block";
-    li.childNodes[1].style.visibility = "visible";
+    li.childNodes[1].style.display = "block";
 
     let item = todoList.filter( ( val => val.id === id ) );
     todoList.splice( todoList.indexOf(item), 1, {id: id, item: li, status: item[0].status} );
