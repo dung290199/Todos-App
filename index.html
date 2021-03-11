@@ -25,16 +25,16 @@
         </div>
 
         <div class="footer">
-            <p><span id="counter"></span> items left</p>
+            <p><span id="counter">0</span> items left</p>
             <ul class="filters">
                 <li>
-                    <a id="all" href="#" onclick="getAll()">All</a>
+                    <a id="all" href="#" onclick="getData(event)">All</a>
                 </li>
                 <li>
-                    <a id="active" href="#" onclick="getActive()">Active</a>
+                    <a id="active" href="#" onclick="getData(event)">Active</a>
                 </li>
                 <li>
-                    <a id="completed" href="#" onclick="getCompleted()">Completed</a>
+                    <a id="completed" href="#" onclick="getData(event)">Completed</a>
                 </li>
             </ul>
             <a href="#" onclick="clearCompleted()">Clear completed</a>

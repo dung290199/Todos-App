@@ -1,12 +1,12 @@
-let todoList = [];
 let tab = [
     { name: "all", status: false },
     { name: "active", status: false },
     { name: "completed", status: false }
 ];
+let todoList = [];
 
 function newToDo( e ) {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && e.target.value !== "") {  
         let li = document.createElement("LI");
         let id = '_' + Math.random().toString(36).substr(2, 9);
         li.id = id;
@@ -16,16 +16,16 @@ function newToDo( e ) {
         checkBox.name = "item" + id;
         checkBox.addEventListener("click", function() {
             if (checkBox.checked) {
-                addToCompleted(id);
+                tick(id, true);
             } else {
-                removeFromCompleted(id);
+                tick(id, false);
             }
         })
 
         let label = document.createElement("LABEL");
         label.for = "item" + id;
         label.ondblclick  = function() {
-            editing(id);
+            editing(id, true);
         }
 
         let todo = document.getElementById("new-todos").value;
@@ -43,11 +43,11 @@ function newToDo( e ) {
         edit.id = "edit" + id;
         edit.className = "edit";
         edit.addEventListener("focusout", function() {
-            update(id);
+            editing(id, false);
         });
         edit.onkeypress = function(e) {
             if ( e.key === "Enter" ) {
-                update(id);
+                editing(id, false);
             }
         }
 
@@ -59,7 +59,8 @@ function newToDo( e ) {
         todoList.push({id: id, item : li, status: true});
 
         if (todoList.length === 1){
-            selectedTab("all");
+            tab[0].status = true;
+            document.getElementById(tab[0].name).className = "selected";
             document.getElementsByClassName("footer")[0].style.visibility = "visible";
             let icon = document.getElementById("selectAll");
             icon.style.visibility = "visible";
@@ -77,11 +78,7 @@ function newToDo( e ) {
 }
 
 function deleteItem( id ) {
-    let index = todoList.filter( ( val, index ) => {
-        if ( val.id === id ) {
-            return index;
-        }
-    } );
+    let index = todoList.indexOf(todoList.filter( val => { val.id === id } ));
 
     todoList.splice(index, 1);
     document.getElementById(id).remove();
@@ -90,43 +87,6 @@ function deleteItem( id ) {
         hiddenFooter();
     }
     displayClearCompletedLink(countCompleted() !== 0);
-    return;
-}
-
-function addToCompleted( id ) {
-    todoList = todoList.map( val => {
-        if (val.id === id) {
-            val.status = false;
-            let li = document.getElementById(val.id);
-            li.getElementsByTagName("LABEL")[0].className = "checked";
-            if (tab[1].status) {
-                li.remove();
-            }
-        }
-        return val;
-    } );
-    
-    displayClearCompletedLink(true);
-    getCounter();
-    return;
-}
-
-function removeFromCompleted(id) {
-    todoList = todoList.map( val => {
-        if ( val.id === id ) {
-            val.status = true;
-            let li = document.getElementById(val.id);
-            li.getElementsByTagName("LABEL")[0].classList.remove("checked");
-            if ( tab[2].status ) {
-                li.remove();
-            }
-        }
-        return val;
-    } );
-
-    displayClearCompletedLink( countCompleted() !== 0 );
-
-    getCounter();
     return;
 }
 
@@ -143,7 +103,24 @@ function clearCompleted() {
         hiddenFooter();
     } 
     displayClearCompletedLink(false);
+    return;
+}
 
+function tick(id, arg) {
+    todoList = todoList.map( val => {
+        if (val.id === id) {
+            val.status = !arg;
+            let li = document.getElementById(val.id);
+            arg ? li.getElementsByTagName("LABEL")[0].className = "checked" : li.getElementsByTagName("LABEL")[0].classList.remove("checked");
+            if ((tab[1].status && arg) || (tab[2].status && !arg)) {
+                li.remove();
+            }
+        }
+        return val;
+    } );
+    
+    displayClearCompletedLink(true);
+    getCounter();
     return;
 }
 
@@ -158,61 +135,32 @@ function hiddenFooter() {
 }
 
 function getCounter() {
-    let span = document.getElementById("counter");
     let counter = document.createTextNode(todoList.filter( val => val.status ).length);
-    if (span.childNodes.length === 0) {
-        span.appendChild(counter);
-    } else {
-        span.replaceChild(counter, span.childNodes[0]);
-    }
-
+    let span = document.getElementById("counter");
+    span.replaceChild(counter, span.childNodes[0]);
     return;
 }
 
-function getAll() {
-    selectedTab("all");
-
-    let list = document.getElementById("todo-list");
-    todoList.map( val => {
-        list.appendChild(val.item);
-    });
-
-    return;
-}
-
-function getActive() {
-    selectedTab("active");
-
+function getData(e) {
+    let tabName = e.target.innerHTML.toLowerCase();
     let list = document.getElementById("todo-list");
     removeAllChildNodes(list);
-
-    let arr = todoList.filter(val => val.status);
-    arr.map( val => list.appendChild(val.item) );
-
-    return;
-}
-
-function getCompleted() {
-    selectedTab("completed");
-
-    let list = document.getElementById("todo-list");
-    removeAllChildNodes(list);
-
-    let arr = todoList.filter(val => !val.status);
-    arr.map( val => list.appendChild(val.item) );
-    return;
-}
-
-function selectedTab(name) {
     tab = tab.map( val => {
-        val.status = val.name === name;
+        val.status = val.name === tabName;
         if (val.status) {
             document.getElementById(val.name).className = "selected";
+            let arr = ( val.name === "active" ) 
+                    ? todoList.filter(val => val.status) 
+                    : (val.name === "completed")
+                        ? todoList.filter(val => !val.status) 
+                        : todoList;
+            arr.map( val => list.appendChild(val.item) );
+
         } else {
             document.getElementById(val.name).classList.remove("selected");
         }
         return val;
-    });
+    } )
 
     return;
 }
@@ -225,31 +173,29 @@ function removeAllChildNodes(parent) {
 }
 
 function selectAll() {
-    let check = todoList.filter( val => val.status );
+    // kiem tra xem co can tick khong => tuc la trong mang co phan tu chua tick thi can tick cho het
+    // check: true => tick all, nguoc lai untick all
+    let check = todoList.filter( val => val.status ).length !== 0; 
     let list = document.getElementById("todo-list");
-    todoList = ( check.length !== 0 ) 
-                ? todoList.map( val => {
-                        val.status = false;
-                        val.item.getElementsByTagName("INPUT")[0].checked =  true;
-                        val.item.getElementsByTagName("LABEL")[0].className = "checked";
-                        if (tab[1].status) {
-                            document.getElementById(val.id).remove();
-                        } else if (tab[2].status) {
-                            list.appendChild(val.item);                        
-                        }
-                        return val;
-                    } )
-                : todoList.map( val => {
-                        val.status = true;
-                        val.item.getElementsByTagName("INPUT")[0].checked = false;
-                        val.item.getElementsByTagName("LABEL")[0].classList.remove("checked");
-                        if ( tab[2].status ) {
-                            document.getElementById(val.id).remove();
-                        } else if ( tab[1].status ) {
-                            list.appendChild(val.item);
-                        }
-                        return val;
-                    } );
+    let tabName = tab.filter( val => val.status )[0].name;
+
+    todoList = todoList.map( val => {
+        val.status = !check;
+        val.item.getElementsByTagName("INPUT")[0].checked = check;
+        let labelStyle = val.item.getElementsByTagName("LABEL")[0].classList;
+        check ? labelStyle.add("checked") : labelStyle.remove("checked");
+
+        // dang o tab "active", check = false 
+        // dang o tab "completed", check = true 
+        // => hien thi
+        if ( (tabName === "active" && !check) || (tabName === "completed" && check) ) {
+            list.appendChild(val.item); 
+        } else if (tabName !== "all") {
+            document.getElementById(val.id).remove(); // neu khong phai o tab "all" thi khong hien thi 
+        }
+        return val;    
+    } );
+   
     displayClearCompletedLink( countCompleted() !== 0);
     getCounter();
     return;
@@ -264,32 +210,24 @@ function displayClearCompletedLink( arg ) {
     return;
 }
 
-function editing(id) {
+//true: dang edit, false: edit xong
+function editing(id, arg) {
     let edit = document.getElementById("edit" + id);
-    edit.style.visibility = "visible";
-
+    edit.style.visibility = arg ? "visible" : "hidden";
+    
     let li = document.getElementById(id);
-    let label = li.getElementsByTagName("LABEL")[0].innerHTML;
-    edit.value = label;
-    edit.focus();
-    edit.scrollLeft = edit.scrollWidth;
+    li.childNodes[0].style.display = arg ? "none" : "block";
+    li.childNodes[1].style.display = arg ? "none" : "block";
 
-    li.childNodes[0].style.display = "none";
-    li.childNodes[1].style.display = "none";
-    return;
-}
-
-function update(id) {
-    let edit = document.getElementById("edit" + id);
-    edit.style.visibility = "hidden";
-
-    let li = document.getElementById(id);
-    li.getElementsByTagName("LABEL")[0].innerHTML = edit.value;
-    li.childNodes[0].style.display = "block";
-    li.childNodes[1].style.display = "block";
-
-    let item = todoList.filter( ( val => val.id === id ) );
-    todoList.splice( todoList.indexOf(item), 1, {id: id, item: li, status: item[0].status} );
-
+    if (arg) {
+        let label = li.getElementsByTagName("LABEL")[0].innerHTML;
+        edit.value = label;
+        edit.focus();
+        edit.scrollLeft = edit.scrollWidth;
+    } else if (edit.value !== "") {
+        li.getElementsByTagName("LABEL")[0].innerHTML = edit.value;
+        let item = todoList.filter( ( val => val.id === id ) );
+        todoList.splice( todoList.indexOf(item), 1, {id: id, item: li, status: item[0].status} );
+    }
     return;
 }
