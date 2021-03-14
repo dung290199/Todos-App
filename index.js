@@ -78,7 +78,7 @@ function newToDo( e ) {
 }
 
 function deleteItem( id ) {
-    let index = todoList.indexOf(todoList.filter( val => { val.id === id } ));
+    let index = todoList.indexOf(todoList.filter( val => val.id === id )[0]);
 
     todoList.splice(index, 1);
     document.getElementById(id).remove();
@@ -191,7 +191,8 @@ function selectAll() {
         if ( (tabName === "active" && !check) || (tabName === "completed" && check) ) {
             list.appendChild(val.item); 
         } else if (tabName !== "all") {
-            document.getElementById(val.id).remove(); // neu khong phai o tab "all" thi khong hien thi 
+            let li = document.getElementById(val.id);
+            if (li !== null) li.remove(); // neu khong phai o tab "all" thi khong hien thi 
         }
         return val;    
     } );
